@@ -1,0 +1,14 @@
+version: '3'
+services:
+  client:
+    build: .
+    ports:
+      - "8080:80"
+    environment:
+      - BASE_API=example.com
+
+#    volumes:
+#      - .:/code
+#      - logvolume01:/var/log
+#volumes:
+#  logvolume01: {}
