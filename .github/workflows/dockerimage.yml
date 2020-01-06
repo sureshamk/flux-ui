@@ -7,7 +7,6 @@ jobs:
       - uses: actions/checkout@master
       - name: Build, Tag, Publish Docker
         uses: HurricanKai/Publish-Docker-Github-Action@1.12.1
-        if: contains(github.ref, 'refs/tags/v')
         with:
           name: sureshamk/flux-ui
           username: ${{ secrets.DOCKER_USERNAME }}

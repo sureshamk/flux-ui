@@ -161,7 +161,7 @@
         selectedItem: {},
         jobs: [],
         rows: [],
-        search: 'tail'
+        search: ''
       };
     },
     components: {
