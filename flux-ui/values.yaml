@@ -6,8 +6,8 @@ replicaCount: 1
 
 image:
   repository: sureshamk/flux-ui
-  tag: master
-  pullPolicy: IfNotPresent
+  tag: latest
+  pullPolicy: Always
 
 imagePullSecrets: []
 nameOverride: ""
