@@ -2,5 +2,6 @@ flux-ui
 dist
 node_modules
 .github
+.idea
 docker-compose.yml
 README.md
