@@ -2,8 +2,8 @@ module.exports = {
   devServer: {
     proxy: {
       '^/api': {
-        target: 'example.com'
+        target: process.env.VUE_APP_PROXY_TARGET
       }
     }
   }
-}
+};

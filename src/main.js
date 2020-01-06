@@ -6,6 +6,7 @@ Vue.config.productionTip = false;
 // eslint-disable-next-line no-undef
 Vue.use(ClientTable, {
   theme: 'bootstrap4'
+  // theme: 'bulma'
 });
 import VueSweetalert2 from 'vue-sweetalert2';
 

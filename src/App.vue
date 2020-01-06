@@ -1,6 +1,14 @@
 <template>
     <div id="app">
-
+        <div class="alert alert-info alert-dismissible" v-bind:key="job.id" v-for="job in jobs">
+            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+            <i v-if="job.status=='running'" class="fa fa-refresh fa-spin" style="font-size:15px"></i>
+            <i v-if="job.status=='done'" class="fa fa-check" style="font-size:15px;color: green"></i>
+            <i v-if="job.status=='skipped'" class="fa fa-exclamation-circle" style="font-size:15px;color: #e39200"></i>
+            (<i> {{job.status}} </i>)
+            <strong>Release: </strong> {{job.release}}
+            <strong>Action: </strong> {{job.action}}
+        </div>
         <v-client-table :data="rows" :columns="columns" :options="options">
             <span slot="Action" slot-scope="props">
                 <a v-if="!props.row.Automated" target="_blank" :href="props.row.uri" class="btn btn-primary"
@@ -22,8 +30,25 @@
                 release
             </a>
             </span>
+
+            <span slot="Locked" slot-scope="props">
+<!--                {{props.row.Locked.toString()}}-->
+                <i v-if="props.row.Locked" class="fa fa-lock" aria-hidden="true"></i>
+                <i v-else class="fa fa-unlock-alt" aria-hidden="true"></i>
+            </span>
+            <span slot="Automated" slot-scope="props">
+<!--                {{props.row.Automated.toString()}}-->
+                <i v-if="props.row.Automated" class="fa fa-check" aria-hidden="true"></i>
+                <i v-else class="fa fa-times" aria-hidden="true"></i>
+            </span>
+            <!--            <span slot="Status" slot-scope="props">-->
+            <!--                {{props.row.Status.toString()}}-->
+            <!--                <i v-if="props.row.Status" class="fa fa-check" aria-hidden="true"></i>-->
+            <!--                <i v-else class="fa fa-times" aria-hidden="true"></i>-->
+
+            <!--            </span>-->
             <div slot="child_row" slot-scope="props">
-                The link to {{props.row.Containers}} is <a :href="props.row.uri">{{props.row.uri}}</a>
+                The link to {{props.row.Policies}} is <a :href="props.row.uri">{{props.row.uri}}</a>
             </div>
 
         </v-client-table>
@@ -33,33 +58,40 @@
 
 <script>
   import axios from 'axios';
-  let api = window.BASE_API || "/";
 
-  axios.defaults.baseURL = window.BASE_API || "/";
+  let api = window.BASE_API || '/';
+
+  axios.defaults.baseURL = window.BASE_API || '/';
 
   export default {
     name: 'app',
     data: function () {
       return {
         api: api,
+        namespaces: null,
+        jobs: [],
         rows: [],
         columns: [
           'ID',
-          'Antecedent',
+          // 'Antecedent',
+          'Containers',
+          'namespace',
           'Status',
-          'Automated',
-          'Locked',
           // 'Ignore',
           // 'SyncError',
           // 'Antecedent',
           // 'ReadOnly',
-          'Containers',
-          'Policies',
+          'Automated',
+          'Locked',
+          // 'Policies',
           'Action'
 
         ],
         options: {
           // childRow: 'ContainerInfo',
+          orderBy: {
+            column: 'ID'
+          },
           filterable: [
             'ID',
             // 'Release',
@@ -90,10 +122,10 @@
               return row.Containers[0].Current.ID;
             },
             Automated (h, row) {
-              return row.Automated.toString();
+              return row.Automated;
             },
             Locked (h, row) {
-              return row.Locked.toString();
+              return row.Locked;
             },
             Policies (h, row) {
               return JSON.stringify(row.Policies);
@@ -101,20 +133,10 @@
 
           }
         },
-        // config: {
-        //   checkbox_rows: true,
-        //   rows_selectable: true,
-        //   card_mode: false,
-        //   card_title: 'Vue Bootsrap 4 advanced table'
-        // }
+
       };
     },
-    components: {
-      // VueBootstrap4Table
-      // eslint-disable-next-line vue/no-unused-components
-      // ContainerInfo
-      // Simplert
-    },
+    components: {},
     actions: {
       increment () {
         alert(123);
@@ -193,12 +215,28 @@
           // }
         })
           .then(function (response) {
+            // eslint-disable-next-line no-console
+            console.log('response', response.data);
 
             var filtered = response.data.filter(function (number) {
               return number.Antecedent === '';
             });
+            var namespaces = filtered.map(function (data) {
+              let idAndRelease = data.ID.split(/[:/]+/);
+              data.meta = {
+                id: data.ID,
+                namespace: idAndRelease[0],
+                type: idAndRelease[1],
+                name: idAndRelease[2]
+              };
+              data.namespace = idAndRelease[0];
+              // eslint-disable-next-line no-console
+              // console.log('idAndRelease', data);
+              return data;
+            });
 
-            // console.log(filtered)
+            // eslint-disable-next-line no-console
+            console.log('namespaces', namespaces);
 
             self.rows = filtered;
             // eslint-disable-next-line no-console
@@ -226,11 +264,53 @@
 
         axios.post('/api/flux/v9/update-manifests', data)
           .then(function (response) {
-            self.rows = response.data;
+            let jobData = {
+              id: response.data,
+              release,
+              action: 'automate',
+              status: 'running'
+            };
+            self.job(jobData);
+            self.jobs.push(jobData);
             // eslint-disable-next-line no-console
             console.log(response.data, self.rows);
             // self.total_rows = response.data.total;
-            self.fetchData();
+            // self.fetchData();
+
+          })
+          .catch(function (error) {
+            // eslint-disable-next-line no-console
+            console.log(error);
+          });
+      },
+      action (release) {
+        let self = this;
+        let data = {
+          'type': 'policy',
+          'cause': {
+            'Message': 'Test',
+            'User': 'Suresh <suresh@tricog.com>'
+          },
+          'spec': {}
+        };
+        data.spec[release] = {
+          'add': { 'automated': 'true' },
+        };
+
+        axios.post('/api/flux/v9/update-manifests', data)
+          .then(function (response) {
+            let jobData = {
+              id: response.data,
+              release,
+              action: 'automate',
+              status: 'running'
+            };
+            self.job(jobData);
+            self.jobs.push(jobData);
+            // eslint-disable-next-line no-console
+            console.log(response.data, self.rows);
+            // self.total_rows = response.data.total;
+            // self.fetchData();
 
           })
           .catch(function (error) {
@@ -257,7 +337,7 @@
         axios.post('/api/flux/v9/update-manifests', data)
           .then(function (response) {
             self.rows = response.data;
-            self.fetchData();
+            // self.fetchData();
             // eslint-disable-next-line no-console
             console.log(response.data, self.rows);
             // self.total_rows = response.data.total;
@@ -292,6 +372,33 @@
             self.fetchData();
             // eslint-disable-next-line no-console
             console.log(response.data, self.rows);
+            // self.total_rows = response.data.total;
+          })
+          .catch(function (error) {
+            // eslint-disable-next-line no-console
+            console.log(error);
+          });
+      },
+      job (job) {
+        let self = this;
+        axios.get('/api/flux/v6/jobs?id=' + job.id)
+          .then(function (response) {
+            // eslint-disable-next-line no-console
+            console.log('job', response.data, self.rows);
+            let responseData = response.data;
+            if (responseData.StatusString === 'running') {
+              self.job(job);
+            } else {
+              let jobId = job.id;
+              const search = self.jobs.findIndex(element => element.id === jobId);
+              let currentJob = self.jobs[search];
+              currentJob.status = 'skipped';
+              self.$set(self.jobs, search, currentJob);
+              // search.process = 'done    ';
+              // eslint-disable-next-line no-console
+              console.log('job', search, jobId);
+            }
+
             // self.total_rows = response.data.total;
           })
           .catch(function (error) {
