@@ -3,12 +3,10 @@ services:
   client:
     build: .
     ports:
-      - "8080:80"
-    environment:
-      - BASE_API=example.com
-
+      - "8081:80"
+    env_file:
+      - .env.local
 #    volumes:
-#      - .:/code
-#      - logvolume01:/var/log
-#volumes:
-#  logvolume01: {}
+#      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+#      - ./nginx.conf.esh:/nginx.conf.esh
+#      - ./setup.sh:/setup.sh

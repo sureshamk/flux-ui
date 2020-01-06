@@ -59,15 +59,10 @@
 <script>
   import axios from 'axios';
 
-  let api = window.BASE_API || '/';
-
-  axios.defaults.baseURL = window.BASE_API || '/';
-
   export default {
     name: 'app',
     data: function () {
       return {
-        api: api,
         namespaces: null,
         jobs: [],
         rows: [],
@@ -208,6 +203,7 @@
       },
       fetchData () {
         let self = this;
+
         axios.get('/api/flux/v6/services', {
           // params: {
           //   'queryParams': this.queryParams,
@@ -262,7 +258,7 @@
           'add': { 'automated': 'true' },
         };
 
-        axios.post('/api/flux/v9/update-manifests', data)
+        axios.post('//api/flux/v9/update-manifests', data)
           .then(function (response) {
             let jobData = {
               id: response.data,
@@ -408,6 +404,7 @@
       },
     },
     mounted () {
+      axios.defaults.baseURL = this.base_api ;
       this.fetchData();
     },
   };

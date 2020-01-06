@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import App from './App.vue';
 import { ClientTable } from 'vue-tables-2';
-
+Vue.prototype.base_api =  window.BASE_API || '/'
 Vue.config.productionTip = false;
 // eslint-disable-next-line no-undef
 Vue.use(ClientTable, {
