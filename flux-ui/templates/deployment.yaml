@@ -28,6 +28,11 @@ spec:
             - name: http
               containerPort: 80
               protocol: TCP
+          env:
+            - name: END_POINT
+              value: http://flux:3030/
+            - name: BASE_API
+              value: /api/
           livenessProbe:
             httpGet:
               path: /

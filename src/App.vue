@@ -1,215 +1,182 @@
 <template>
     <div id="app">
-        <div class="alert alert-info alert-dismissible" v-bind:key="job.id" v-for="job in jobs">
-            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-            <i v-if="job.status=='running'" class="fa fa-refresh fa-spin" style="font-size:15px"></i>
-            <i v-if="job.status=='done'" class="fa fa-check" style="font-size:15px;color: green"></i>
-            <i v-if="job.status=='skipped'" class="fa fa-exclamation-circle" style="font-size:15px;color: #e39200"></i>
-            (<i> {{job.status}} </i>)
-            <strong>Release: </strong> {{job.release}}
-            <strong>Action: </strong> {{job.action}}
-        </div>
-        <v-client-table :data="rows" :columns="columns" :options="options">
-            <span slot="Action" slot-scope="props">
-                <a v-if="!props.row.Automated" target="_blank" :href="props.row.uri" class="btn btn-primary"
-                   v-on:click="automate(props.row.ID)">
-                Automate
-            </a>
-                <a v-else target="_blank" :href="props.row.uri" class="btn btn-primary"
-                   v-on:click="deAutomate(props.row.ID)">
-                Deautomate
-            </a>
-                <a v-if="!props.row.Locked" target="_blank" v-on:click="greet()" :href="props.row.uri"
-                   class="btn btn-primary">
-                Lock
-            </a>
-                <a v-else target="_blank" :href="props.row.uri" class="btn btn-primary">
-                Unlock
-            </a>
-                <a target="_blank" :href="props.row.uri" class="btn btn-primary">
-                release
-            </a>
-            </span>
+        <div class="container">
+            <div class="row">
+                <div class="col-4">
+                    <div class="view">
+                        <div class="input-group mb-2">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                    <i class="fa fa-search" aria-hidden="true"></i>
+                                </div>
+                            </div>
+                            <input type="text" class="rounded-0 form-control" v-model="search"
+                                   id="inlineFormInputGroup" placeholder="Search">
+                        </div>
+                    </div>
+                    <div style="height: 800px;overflow: auto;">
+                        <div class="card rounded-0" v-bind:class="{ 'text-white bg-primary': selectedItem.ID===row.ID }"
 
-            <span slot="Locked" slot-scope="props">
-<!--                {{props.row.Locked.toString()}}-->
-                <i v-if="props.row.Locked" class="fa fa-lock" aria-hidden="true"></i>
+                             v-bind:key="row.ID"
+                             v-for="(row,index) in filteredAndSorted" v-on:click="view(row,index)">
+                            <div class="card-body">
+
+                                <h5 class="card-title">{{row.ID}}
+                                    <span
+                                            v-if="row.job && Object.keys(row.job).length!==0"><span
+                                            class="badge badge-pill badge-warning"> <JobStatus
+                                            :status="row.job.status"></JobStatus></span></span>
+
+                                </h5>
+                                <h6 class="card-subtitle"> Namespace: {{row.namespace}}</h6>
+                                <p class="m-0">Status : {{row.Status}}</p>
+                                <p class="m-0">Automated <span>
+                <i v-if="row.Automated" class="fa fa-check" aria-hidden="true"></i>
+                <i v-else class="fa fa-times" aria-hidden="true"></i>
+            </span></p>
+                                <p class="m-0">
+                                    Locked
+                                    <span>
+                <i v-if="row.Locked" class="fa fa-lock" aria-hidden="true"></i>
                 <i v-else class="fa fa-unlock-alt" aria-hidden="true"></i>
             </span>
-            <span slot="Automated" slot-scope="props">
-<!--                {{props.row.Automated.toString()}}-->
-                <i v-if="props.row.Automated" class="fa fa-check" aria-hidden="true"></i>
-                <i v-else class="fa fa-times" aria-hidden="true"></i>
-            </span>
-            <!--            <span slot="Status" slot-scope="props">-->
-            <!--                {{props.row.Status.toString()}}-->
-            <!--                <i v-if="props.row.Status" class="fa fa-check" aria-hidden="true"></i>-->
-            <!--                <i v-else class="fa fa-times" aria-hidden="true"></i>-->
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-8" v-if="selectedItem.ID">
 
-            <!--            </span>-->
-            <div slot="child_row" slot-scope="props">
-                The link to {{props.row.Policies}} is <a :href="props.row.uri">{{props.row.uri}}</a>
+                    <div class="card rounded-0">
+                        <div class="card-header">
+                            Workload : {{selectedItem.ID}} RELEASE : {{selectedItem.Status}}
+                        </div>
+                        <div class="card-body">
+
+
+                            <div class="actions">
+
+
+                                <button v-bind:disabled="selectedItem.isActionProgress" v-if="!selectedItem.Automated"
+                                        class="btn btn-primary m-1" type="button"
+                                        v-on:click="action(selectedItem,'automate')">
+
+
+                                    Automate
+                                </button>
+                                <button type="button" v-bind:disabled="selectedItem.isActionProgress" v-else
+                                        class="btn btn-primary m-1"
+                                        v-on:click="action(selectedItem,'deautomate')">
+                                    Deautomate
+                                </button>
+
+
+                                <button v-bind:disabled="selectedItem.isActionProgress" v-if="!selectedItem.Locked"
+                                        v-on:click="action(selectedItem,'lock')"
+                                        class="btn btn-primary m-1">
+                                    Lock
+                                </button>
+                                <button type="button" v-bind:disabled="selectedItem.isActionProgress" v-else
+                                        class="btn btn-primary m-1" v-on:click="action(selectedItem,'lock')">
+                                    Unlock
+                                </button>
+                                <button type="button" v-bind:disabled="selectedItem.isActionProgress"
+                                        class="btn btn-primary m-1">
+                                    release
+                                </button>
+
+                            </div>
+
+                            <div class="alert alert-info alert-dismissible"
+                                 v-if="selectedItem.job && Object.keys(selectedItem.job).length!==0">
+                                <JobStatus :status="selectedItem.job.status"></JobStatus>
+                                (<i> {{selectedItem.job.status}} </i>)
+                                <strong>Release: </strong> {{selectedItem.job.release}}
+                                <strong>Action: </strong> {{selectedItem.job.action}}
+                            </div>
+
+
+                            <table class="table table-hover table-responsive">
+                                <thead>
+                                <tr>
+                                    <th>Container</th>
+                                    <th>Image</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr v-bind:key="index"
+                                    v-for="(container,index) in selectedItem.Containers">
+                                    <th>{{container.Name}}</th>
+                                    <td>{{container.Current.ID}}</td>
+                                </tr>
+                                </tbody>
+                            </table>
+
+
+                            <p>Policies :
+
+                            <pre v-if="Object.keys(selectedItem.Policies).length!==0">{{selectedItem.Policies}}</pre>
+
+
+                            </p>
+                            <table class="table table-hover table-responsive"
+                                   v-if="Object.keys(selectedItem.Policies).length!==0">
+                                <thead>
+                                <!--                                <tr>-->
+                                <!--                                    <th>Container</th>-->
+                                <!--                                    <th>Image</th>-->
+                                <!--                                </tr>-->
+                                </thead>
+                                <tbody>
+                                <tr v-bind:key="index"
+                                    v-for="(policy,index) in selectedItem.Policies">
+                                    <th>{{index}}</th>
+                                    <th>{{policy}}</th>
+                                    <!--                                    <td>{{container.Current.ID}}</td>-->
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="card-footer text-muted">
+
+                        </div>
+                    </div>
+                </div>
             </div>
+        </div>
 
-        </v-client-table>
     </div>
 
 </template>
 
 <script>
   import axios from 'axios';
+  import JobStatus from './components/JobStatus';
 
   export default {
     name: 'app',
     data: function () {
       return {
         namespaces: null,
+        selectedItem: {},
         jobs: [],
         rows: [],
-        columns: [
-          'ID',
-          // 'Antecedent',
-          'Containers',
-          'namespace',
-          'Status',
-          // 'Ignore',
-          // 'SyncError',
-          // 'Antecedent',
-          // 'ReadOnly',
-          'Automated',
-          'Locked',
-          // 'Policies',
-          'Action'
-
-        ],
-        options: {
-          // childRow: 'ContainerInfo',
-          orderBy: {
-            column: 'ID'
-          },
-          filterable: [
-            'ID',
-            // 'Release',
-            // 'Status',
-            // 'Automated',
-            // 'Locked',
-            // 'Ignore',
-            // 'SyncError',
-            // 'Antecedent',
-            // 'ReadOnly',
-            'Containers'
-          ],
-          responseAdapter ({ data }) {
-            return {
-              data,
-              count: data.length
-            };
-          },
-          headings: {
-            'ID': 'WORKLOAD'
-          },
-          templates: {
-            Containers (h, row) {
-
-              return row.Containers[0].Current.ID;
-            },
-            Action (h, row) {
-              return row.Containers[0].Current.ID;
-            },
-            Automated (h, row) {
-              return row.Automated;
-            },
-            Locked (h, row) {
-              return row.Locked;
-            },
-            Policies (h, row) {
-              return JSON.stringify(row.Policies);
-            },
-
-          }
-        },
-
+        search: 'tail'
       };
     },
-    components: {},
-    actions: {
-      increment () {
-        alert(123);
-      }
+    components: {
+      JobStatus
     },
     methods: {
-      greet () {
-        const swalWithBootstrapButtons = this.$swal.mixin({
-          customClass: {
-            confirmButton: 'btn btn-success',
-            cancelButton: 'btn btn-danger'
-          },
-          buttonsStyling: false
-        });
-        this.$swal({
-          title: 'Are you sure?',
-          text: 'You won\'t be able to revert this!',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: 'Yes, delete it!',
-          cancelButtonText: 'No, cancel!',
-          reverseButtons: true
-        }).then((result) => {
-          if (result.value) {
-            axios.get('/api/flux/v6/services', {
-              // params: {
-              //   'queryParams': this.queryParams,
-              //   'page': this.queryParams.page
-              // }
-            })
-              .then(function (response) {
-                swalWithBootstrapButtons.fire(
-                  'Deleted!',
-                  'Your file has been deleted.',
-                  'success'
-                );
-                var filtered = response.data.filter(function (number) {
-                  return number.Antecedent === '';
-                });
-
-                // console.log(filtered)
-
-                self.rows = filtered;
-                // eslint-disable-next-line no-console
-                console.log(response.data, self.rows);
-                // self.total_rows = response.data.total;
-              })
-              .catch(function (error) {
-                // eslint-disable-next-line no-console
-                console.log(error);
-              });
-
-          } else if (
-            /* Read more about handling dismissals below */
-            result.dismiss === this.$swal.DismissReason.cancel
-          ) {
-            swalWithBootstrapButtons.fire(
-              'Cancelled',
-              'Your imaginary file is safe :)',
-              'error'
-            );
-          }
-        });
-
+      view (row) {
+        this.selectedItem.isActionProgress = false;
+        this.selectedItem = row;
+        this.$set(this.rows, this.getIndex(row.ID), this.selectedItem);
       },
-      onChangeQuery (queryParams) {
-        this.queryParams = queryParams;
-        this.fetchData();
-      },
+
       fetchData () {
         let self = this;
-
-        axios.get('/api/flux/v6/services', {
-          // params: {
-          //   'queryParams': this.queryParams,
-          //   'page': this.queryParams.page
-          // }
-        })
+        axios.get('/api/flux/v6/services')
           .then(function (response) {
             // eslint-disable-next-line no-console
             console.log('response', response.data);
@@ -244,7 +211,7 @@
             console.log(error);
           });
       },
-      automate (release) {
+      action (release, action) {
         let self = this;
         let data = {
           'type': 'policy',
@@ -254,163 +221,100 @@
           },
           'spec': {}
         };
-        data.spec[release] = {
-          'add': { 'automated': 'true' },
-        };
-
-        axios.post('//api/flux/v9/update-manifests', data)
-          .then(function (response) {
-            let jobData = {
+        if (action === 'automate') {
+          data.spec[release.ID] = {
+            'add': { 'automated': 'true' },
+          };
+        } else if (action === 'deautomate') {
+          data.spec[release.ID] = {
+            'remove': {
+              'automated': 'true'
+            }
+          };
+        } else if (action === 'lock') {
+          data.spec[release.ID] = {
+            'add': {
+              'locked': 'true',
+              'locked_msg': '',
+              'locked_user': 'Suresh \u003csuresh@tricog.com\u003e'
+            },
+            'remove': {}
+          };
+        }
+        release.isActionProgress = !release.isActionProgress;
+        self.$set(self.rows, this.getIndex(release.ID), release);
+        axios.post('/api/flux/v9/update-manifests', data)
+          .then((response) => {
+            release.job = {
               id: response.data,
-              release,
-              action: 'automate',
+              action: action,
               status: 'running'
             };
-            self.job(jobData);
-            self.jobs.push(jobData);
+            self.$set(self.rows, this.getIndex(release.ID), release);
+            self.job(release);
             // eslint-disable-next-line no-console
-            console.log(response.data, self.rows);
-            // self.total_rows = response.data.total;
-            // self.fetchData();
-
+            console.log(self.rows);
           })
-          .catch(function (error) {
+          .catch((error) => {
             // eslint-disable-next-line no-console
             console.log(error);
           });
       },
-      action (release) {
+      job (release) {
         let self = this;
-        let data = {
-          'type': 'policy',
-          'cause': {
-            'Message': 'Test',
-            'User': 'Suresh <suresh@tricog.com>'
-          },
-          'spec': {}
-        };
-        data.spec[release] = {
-          'add': { 'automated': 'true' },
-        };
-
-        axios.post('/api/flux/v9/update-manifests', data)
-          .then(function (response) {
-            let jobData = {
-              id: response.data,
-              release,
-              action: 'automate',
-              status: 'running'
-            };
-            self.job(jobData);
-            self.jobs.push(jobData);
-            // eslint-disable-next-line no-console
-            console.log(response.data, self.rows);
-            // self.total_rows = response.data.total;
-            // self.fetchData();
-
-          })
-          .catch(function (error) {
-            // eslint-disable-next-line no-console
-            console.log(error);
-          });
-      },
-      deAutomate (release) {
-        let self = this;
-        let data = {
-          'type': 'policy',
-          'cause': {
-            'Message': 'Test',
-            'User': 'Suresh <suresh@tricog.com>'
-          },
-          'spec': {}
-        };
-        data.spec[release] = {
-          'remove': {
-            'automated': 'true'
-          }
-        };
-
-        axios.post('/api/flux/v9/update-manifests', data)
-          .then(function (response) {
-            self.rows = response.data;
-            // self.fetchData();
-            // eslint-disable-next-line no-console
-            console.log(response.data, self.rows);
-            // self.total_rows = response.data.total;
-          })
-          .catch(function (error) {
-            // eslint-disable-next-line no-console
-            console.log(error);
-          });
-      },
-      lock (release) {
-        let self = this;
-        let data = {
-          'type': 'policy',
-          'cause': {
-            'Message': 'Test',
-            'User': 'Suresh <suresh@tricog.com>'
-          },
-          'spec': {}
-        };
-        data.spec[release] = {
-          'add': {
-            'locked': 'true',
-            'locked_msg': '',
-            'locked_user': 'Suresh \u003csuresh@tricog.com\u003e'
-          },
-          'remove': {}
-        };
-
-        axios.post('/api/flux/v9/update-manifests', data)
-          .then(function (response) {
-            self.rows = response.data;
-            self.fetchData();
-            // eslint-disable-next-line no-console
-            console.log(response.data, self.rows);
-            // self.total_rows = response.data.total;
-          })
-          .catch(function (error) {
-            // eslint-disable-next-line no-console
-            console.log(error);
-          });
-      },
-      job (job) {
-        let self = this;
-        axios.get('/api/flux/v6/jobs?id=' + job.id)
-          .then(function (response) {
+        axios.get('/api/flux/v6/jobs?id=' + release.job.id)
+          .then((response) => {
             // eslint-disable-next-line no-console
             console.log('job', response.data, self.rows);
             let responseData = response.data;
-            if (responseData.StatusString === 'running') {
-              self.job(job);
+            release.job.result = response.data;
+            self.$set(self.rows, this.getIndex(release.ID), release);
+            if (responseData.StatusString === 'running' || responseData.StatusString === 'queued') {
+              self.job(release);
+              release.job.status = responseData.StatusString;
             } else {
-              let jobId = job.id;
-              const search = self.jobs.findIndex(element => element.id === jobId);
-              let currentJob = self.jobs[search];
-              currentJob.status = 'skipped';
-              self.$set(self.jobs, search, currentJob);
-              // search.process = 'done    ';
-              // eslint-disable-next-line no-console
-              console.log('job', search, jobId);
-            }
+              release.isActionProgress = !release.isActionProgress;
+              if (response.data.Result.result[release.ID].Status === 'success') {
+                if (release.job.action === 'automate' || release.job.action === 'deautomate') {
+                  release.Automated = !release.Automated;
 
-            // self.total_rows = response.data.total;
+                }
+                if (release.job.action === 'lock' || release.job.action === 'unlock') {
+                  release.Locked = !release.Locked;
+
+                }
+              }
+
+              release.job.status = response.data.Result.result[release.ID].Status;
+            }
           })
           .catch(function (error) {
             // eslint-disable-next-line no-console
             console.log(error);
           });
       },
+      getIndex (releaseId) {
+        return this.rows.findIndex(element => element.ID === releaseId);
+      }
     },
     mounted () {
-      axios.defaults.baseURL = this.base_api ;
+      axios.defaults.baseURL = this.base_api;
       this.fetchData();
     },
-  };
+    computed: {
+      filteredAndSorted () {
+        function compare (a, b) {
+          if (a.name < b.name) return -1;
+          if (a.name > b.name) return 1;
+          return 0;
+        }
 
-  // /tmp/gor --input-raw :3030 --output-stdout
-  // /tmp/gor --input-raw :3030 --output-file=requests.gor
+        return this.rows.filter(row => {
+          return row.ID.toLowerCase().includes(this.search.toLowerCase());
+        }).sort(compare);
+      }
+    }
+  };
 </script>
 
 <style>
@@ -422,26 +326,4 @@
         color: #2c3e50;
         /*margin-top: 60px;*/
     }
-
-    .VueTables__child-row-toggler {
-        width: 16px;
-        height: 16px;
-        line-height: 16px;
-        display: block;
-        margin: auto;
-        text-align: center;
-    }
-
-    .VueTables__child-row-toggler--closed::before {
-        content: "+";
-    }
-
-    .VueTables__child-row-toggler--open::before {
-        content: "-";
-    }
 </style>
-
-<!--https://cloud.weave.works/api/app/autumn-paper-03/api/flux/v10/images?containerFields=Name%2CAvailable&service=contact%3Adeployment%2Fhydro2-->
-<!--https://cloud.weave.works/api/app/autumn-paper-03/api/flux/v6/history?limit=20&service=contact%3Adeployment%2Fhydro2-->
-<!--https://cloud.weave.works/api/app/autumn-paper-03/api/flux/v6/policies?user=weave%20weave%20%3Cweave345%40yopmail.com%3E-->
-<!--{"contact:deployment/hydro2":{"add":{"tag.hydro2":"glob:d38e5*"}}}-->
