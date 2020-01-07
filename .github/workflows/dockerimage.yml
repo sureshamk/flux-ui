@@ -5,11 +5,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
+      #      - name: Build, Tag, Publish Docker
+      #        uses: HurricanKai/Publish-Docker-Github-Action@1.12.1
+      #        if: contains(github.ref, 'refs/tags/v')
+      #        with:
+      #          name: sureshamk/flux-ui
+      #          username: ${{ secrets.DOCKER_USERNAME }}
+      #          password: ${{ secrets.DOCKER_PASSWORD }}
+      #          cache: true
+      #          tagging: true
       - name: Build, Tag, Publish Docker
-        uses: HurricanKai/Publish-Docker-Github-Action@1.12.1
+        uses: mr-smithers-excellent/docker-build-push@v1.0
         with:
-          name: sureshamk/flux-ui
+          image: sureshamk/flux-ui
+          registry: docker.io
+          dockerfile: Dockerfile
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          cache: true
-          tagging: true
