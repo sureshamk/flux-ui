@@ -24,7 +24,7 @@ ingress:
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
-    - host: fluxui.tricogapps.com
+    - host: fluxui.example.com
       paths:
         - /
 

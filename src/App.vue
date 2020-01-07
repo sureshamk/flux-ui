@@ -1,8 +1,8 @@
 <template>
     <div id="app">
-        <div class="container">
+        <div class="container-fluid">
             <div class="row">
-                <div class="col-4">
+                <div class="col-3">
                     <div class="view">
                         <div class="input-group mb-2">
                             <div class="input-group-prepend">
@@ -45,7 +45,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-8" v-if="selectedItem.ID">
+                <div class="col-5" v-if="selectedItem.ID">
 
                     <div class="card rounded-0">
                         <div class="card-header">
@@ -53,48 +53,28 @@
                         </div>
                         <div class="card-body">
 
-
                             <div class="actions">
-
-
-                                <button v-bind:disabled="selectedItem.isActionProgress" v-if="!selectedItem.Automated"
+                                <button v-bind:disabled="selectedItem.isActionProgress"
                                         class="btn btn-primary m-1" type="button"
-                                        v-on:click="action(selectedItem,'automate')">
-
-
-                                    Automate
+                                        v-on:click="toggleAction('automate')">
+                                    {{!selectedItem.Automated ? 'Automate':'DeAutomate'}}
                                 </button>
-                                <button type="button" v-bind:disabled="selectedItem.isActionProgress" v-else
-                                        class="btn btn-primary m-1"
-                                        v-on:click="action(selectedItem,'deautomate')">
-                                    Deautomate
-                                </button>
-
-
-                                <button v-bind:disabled="selectedItem.isActionProgress" v-if="!selectedItem.Locked"
-                                        v-on:click="action(selectedItem,'lock')"
+                                <button v-bind:disabled="selectedItem.isActionProgress"
+                                        v-on:click="toggleAction('lock')"
                                         class="btn btn-primary m-1">
-                                    Lock
-                                </button>
-                                <button type="button" v-bind:disabled="selectedItem.isActionProgress" v-else
-                                        class="btn btn-primary m-1" v-on:click="action(selectedItem,'lock')">
-                                    Unlock
+                                    {{!selectedItem.Locked ? 'Lock':'Unlock'}}
                                 </button>
                                 <button type="button" v-bind:disabled="selectedItem.isActionProgress"
+                                        v-on:click="toggleAction('release')"
                                         class="btn btn-primary m-1">
                                     release
                                 </button>
-
+                                <button type="button" v-bind:disabled="selectedItem.isActionProgress"
+                                        v-on:click="toggleAction('sync')"
+                                        class="btn btn-primary m-1">
+                                    Sync
+                                </button>
                             </div>
-
-                            <div class="alert alert-info alert-dismissible"
-                                 v-if="selectedItem.job && Object.keys(selectedItem.job).length!==0">
-                                <JobStatus :status="selectedItem.job.status"></JobStatus>
-                                (<i> {{selectedItem.job.status}} </i>)
-                                <strong>Release: </strong> {{selectedItem.job.release}}
-                                <strong>Action: </strong> {{selectedItem.job.action}}
-                            </div>
-
 
                             <table class="table table-hover table-responsive">
                                 <thead>
@@ -113,33 +93,124 @@
                             </table>
 
 
-                            <p>Policies :
-
-                            <pre v-if="Object.keys(selectedItem.Policies).length!==0">{{selectedItem.Policies}}</pre>
-
-
-                            </p>
-                            <table class="table table-hover table-responsive"
+                            <h6>Policies </h6>
+                            <table class="table table-hover"
                                    v-if="Object.keys(selectedItem.Policies).length!==0">
                                 <thead>
-                                <!--                                <tr>-->
-                                <!--                                    <th>Container</th>-->
-                                <!--                                    <th>Image</th>-->
-                                <!--                                </tr>-->
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Policy</th>
+                                </tr>
                                 </thead>
                                 <tbody>
                                 <tr v-bind:key="index"
                                     v-for="(policy,index) in selectedItem.Policies">
                                     <th>{{index}}</th>
                                     <th>{{policy}}</th>
-                                    <!--                                    <td>{{container.Current.ID}}</td>-->
                                 </tr>
                                 </tbody>
                             </table>
+                            <hr>
+                            <button v-on:click="getImages">
+                                Show Images
+                            </button>
+                            <!--                            <pre>{{selectedItem}}</pre>-->
+                            <template v-if="selectedItem.listImages">
+                                <ListImages v-bind:images="selectedItem.listImages"></ListImages>
+                            </template>
                         </div>
+
                         <div class="card-footer text-muted">
 
                         </div>
+                    </div>
+                </div>
+                <div class="col-4" v-if="actionType">
+
+                    <form>
+                        <div v-if="actionType==='release'">
+                            <div class="form-group">
+                                <label for="formGroupExampleInput33">Type</label>
+                                <select id="formGroupExampleInput33" v-model="release.imageType" class="form-control"
+                                        name="">
+                                    <option value="<all latest>">All images</option>
+                                    <option value="selective">Selective Images</option>
+                                </select>
+                            </div>
+                            <div class="form-group" v-if="release.imageType==='selective'">
+                                <label for="formGroupExampleInput44">Image</label>
+                                <input type="text" class="form-control" id="formGroupExampleInput44"
+                                       placeholder="User for this action" v-model="release.image">
+                            </div>
+
+                            <div class="form-group">
+
+                                <label for="formGroupExampleInput33"> Force Update </label>
+                                <br>
+
+                                <div class="form-check form-check-inline">
+                                    <input v-model="release.force" class="form-check-input" type="radio"
+                                           name="inlineRadioOptions" id="inlineRadio2"
+                                           value="false">
+                                    <label class="form-check-label" for="inlineRadio2">No</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input v-model="release.force" class="form-check-input" type="radio"
+                                           name="inlineRadioOptions" id="inlineRadio1"
+                                           value="true">
+                                    <label class="form-check-label" for="inlineRadio1">Yes</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="formGroupExampleInput">Message</label>
+                            <textarea class="form-control" id="formGroupExampleInput"
+                                      placeholder="Message" v-model="cause.Message"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="formGroupExampleInput2">User</label>
+                            <input type="text" class="form-control" id="formGroupExampleInput2"
+                                   placeholder="User for this action" v-model="cause.User">
+                        </div>
+                        <button v-if="actionType==='release'" type="button"
+                                v-bind:disabled="selectedItem.isActionProgress"
+                                v-on:click="action(selectedItem,'release')"
+                                class="btn btn-primary m-1">
+                            Apply
+                        </button>
+                        <button v-if="actionType==='sync'" type="button"
+                                v-bind:disabled="selectedItem.isActionProgress"
+                                v-on:click="action(selectedItem,'sync')"
+                                class="btn btn-primary m-1">
+                            Apply
+                        </button>
+
+                        <button v-if="actionType==='lock'" v-bind:disabled="selectedItem.isActionProgress"
+                                v-on:click="action(selectedItem,!selectedItem.Locked ? 'lock':'unlock')"
+                                class="btn btn-primary m-1">
+                            {{!selectedItem.Locked ? 'Lock':'Unlock'}}
+                        </button>
+                        <button v-if="actionType==='automate'" v-bind:disabled="selectedItem.isActionProgress"
+                                class="btn btn-primary m-1" type="button"
+                                v-on:click="action(selectedItem,!selectedItem.Automated ? 'automate':'deautomate')">
+                            {{!selectedItem.Automated ? 'Automate':'DeAutomate'}}
+                        </button>
+
+                    </form>
+                    <div class="alert " v-bind:class="{
+                    'alert-danger':selectedItem.job.status==='failed',
+                    'alert-info':selectedItem.job.status==='success',
+                    'alert-warning':selectedItem.job.status==='skipped',
+                    }"
+                         v-if="selectedItem.job && Object.keys(selectedItem.job).length!==0">
+                        <JobStatus :status="selectedItem.job.status"></JobStatus>
+                        (<i> {{selectedItem.job.status}} </i>)
+                        <strong>Release: </strong> {{selectedItem.job.release}}
+                        <strong>Action: </strong> {{selectedItem.job.action}}
+                        <p v-if="selectedItem.job.result && selectedItem.job.result.Err">
+                            {{selectedItem.job.result.Err}}
+                        </p>
+                        <!--                        <pre>{{selectedItem}}</pre>-->
                     </div>
                 </div>
             </div>
@@ -152,6 +223,7 @@
 <script>
   import axios from 'axios';
   import JobStatus from './components/JobStatus';
+  import ListImages from './components/ListImages';
 
   export default {
     name: 'app',
@@ -161,11 +233,25 @@
         selectedItem: {},
         jobs: [],
         rows: [],
-        search: ''
+        actions: {
+          type: '',
+          label: ''
+        },
+        actionType: null,
+        search: '',
+        cause: {
+          Message: '',
+          User: ''
+        },
+        release: {
+          force: 'false',
+          imageType: '<all latest>'
+        }
       };
     },
     components: {
-      JobStatus
+      JobStatus,
+      ListImages
     },
     methods: {
       view (row) {
@@ -173,7 +259,9 @@
         this.selectedItem = row;
         this.$set(this.rows, this.getIndex(row.ID), this.selectedItem);
       },
-
+      toggleAction (action) {
+        this.actionType = action;
+      },
       fetchData () {
         let self = this;
         axios.get('/api/flux/v6/services')
@@ -183,6 +271,9 @@
 
             var filtered = response.data.filter(function (number) {
               return number.Antecedent === '';
+            });
+            filtered = filtered.filter(function (number) {
+              return number.ReadOnly !== 'NotInRepo';
             });
             var namespaces = filtered.map(function (data) {
               let idAndRelease = data.ID.split(/[:/]+/);
@@ -211,14 +302,29 @@
             console.log(error);
           });
       },
+      getImages () {
+        axios.get('/api/flux/v10/images?containerFields=&namespace=&service=' + this.selectedItem.ID)
+          .then((response) => {
+            let data = this.selectedItem;
+            data.listImages = response.data[0].Containers;
+            // eslint-disable-next-line no-console
+            console.log('Imagesssss', response.data, this.selectedItem.listImages);
+
+            this.$set(this.rows, this.getIndex(this.selectedItem.ID), data);
+
+          })
+          .catch(function (error) {
+            // eslint-disable-next-line no-console
+            console.log(error);
+          });
+      },
       action (release, action) {
+        // eslint-disable-next-line no-console
+        console.log(action);
         let self = this;
         let data = {
           'type': 'policy',
-          'cause': {
-            'Message': 'Test',
-            'User': 'Suresh <suresh@tricog.com>'
-          },
+          'cause': this.cause,
           'spec': {}
         };
         if (action === 'automate') {
@@ -235,11 +341,32 @@
           data.spec[release.ID] = {
             'add': {
               'locked': 'true',
-              'locked_msg': '',
-              'locked_user': 'Suresh \u003csuresh@tricog.com\u003e'
+              'locked_msg': this.cause.Message,
+              'locked_user': this.cause.User,
             },
             'remove': {}
           };
+        } else if (action === 'unlock') {
+          data.spec[release.ID] = {
+            'remove': {
+              'locked': 'true',
+              'locked_msg': this.cause.Message,
+              'locked_user': this.cause.User,
+            },
+            'add': {}
+          };
+        } else if (action === 'release') {
+          data.type = 'image';
+          data.spec = {
+            'ServiceSpecs': [release.ID],
+            'ImageSpec': this.getReleaseInfo.ImageSpec,
+            'Kind': 'execute',
+            'Excludes': null,
+            'Force': this.getReleaseInfo.Force
+          };
+        } else if (action === 'sync') {
+          data.type = 'sync';
+          data.spec = {};
         }
         release.isActionProgress = !release.isActionProgress;
         self.$set(self.rows, this.getIndex(release.ID), release);
@@ -265,27 +392,52 @@
         axios.get('/api/flux/v6/jobs?id=' + release.job.id)
           .then((response) => {
             // eslint-disable-next-line no-console
-            console.log('job', response.data, self.rows);
             let responseData = response.data;
             release.job.result = response.data;
+            let status = 'running';
+
             self.$set(self.rows, this.getIndex(release.ID), release);
-            if (responseData.StatusString === 'running' || responseData.StatusString === 'queued') {
+            if (responseData.StatusString === 'failed') {
+              release.job.status = responseData.StatusString;
+            } else if (responseData.StatusString === 'running' || responseData.StatusString === 'queued') {
               self.job(release);
               release.job.status = responseData.StatusString;
             } else {
-              release.isActionProgress = !release.isActionProgress;
-              if (response.data.Result.result[release.ID].Status === 'success') {
-                if (release.job.action === 'automate' || release.job.action === 'deautomate') {
-                  release.Automated = !release.Automated;
+              status = 'success';
+              if (responseData.Result.result && responseData.Result.result.Status === 'skipped') {
+                status = 'skipped';
+              }
+              if (this.actionType === 'sync') {
+                release.job.status = status;
+              }
+              if (status === 'success') {
 
+                if (responseData.Result.result && responseData.Result.result[release.ID]) {
+                  status = responseData.Result.result[release.ID].Status;
                 }
-                if (release.job.action === 'lock' || release.job.action === 'unlock') {
-                  release.Locked = !release.Locked;
 
+                if (status !== 'skipped') {
+                  if (release.job.action === 'automate' || release.job.action === 'deautomate') {
+                    release.Automated = !release.Automated;
+
+                  }
+                  if (release.job.action === 'lock' || release.job.action === 'unlock') {
+                    release.Locked = !release.Locked;
+
+                  }
                 }
+                if (responseData.Result.result && responseData.Result.result[release.ID]) {
+                  release.job.status = responseData.Result.result[release.ID].Status;
+                }
+
               }
 
-              release.job.status = response.data.Result.result[release.ID].Status;
+            }
+            // eslint-disable-next-line no-console
+            console.log('Satt', status);
+            if (status === 'success' || status === 'skipped' || responseData.StatusString === 'failed') {
+              release.isActionProgress = !release.isActionProgress;
+              self.$set(self.rows, this.getIndex(release.ID), release);
             }
           })
           .catch(function (error) {
@@ -312,6 +464,21 @@
         return this.rows.filter(row => {
           return row.ID.toLowerCase().includes(this.search.toLowerCase());
         }).sort(compare);
+      },
+      getAlertClass () {
+        // eslint-disable-next-line no-console
+        console.log('DDDDDD', this.selectedItem.job.status);
+        if (this.selectedItem.job.status === 'failed') {
+          return 'alert-danger ';
+
+        }
+        return 'alert-info ';
+      },
+      getReleaseInfo () {
+        return {
+          'ImageSpec': this.release.imageType === '<all latest>' ? '<all latest>' : this.release.image,
+          'Force': this.release.force === 'true'
+        };
       }
     }
   };
