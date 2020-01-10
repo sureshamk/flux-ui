@@ -6,7 +6,7 @@
 # Flux-ui 
 This is project for providing web ui for fluxctl. 
 
-## Install through helm (tested helm-v3)
+## Install through helm (tested in helm-v3)
 
 ```shell script
 
