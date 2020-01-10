@@ -1,0 +1,13 @@
+apiVersion: v1
+entries:
+  flux-ui:
+  - apiVersion: v1
+    appVersion: "1.0"
+    created: "2020-01-11T01:25:03.453066+05:30"
+    description: A Helm chart for flux-ui to interact with fluxctl
+    digest: 1a7058e97524257f7e0aa667b5323fcec4c215d4e517132ce88f4eb29ef0147a
+    name: flux-ui
+    urls:
+    - flux-ui-0.1.0.tgz
+    version: 0.1.0
+generated: "2020-01-11T01:25:03.452359+05:30"
