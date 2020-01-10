@@ -3,7 +3,7 @@ This is project for providing web ui for fluxctl.
 
 ## Install through helm (tested helm-v3)
 
-```console
+```shell script
 
 $ helm repo add flux-ui 'https://raw.githubusercontent.com/sureshamk/flux-ui/master/flux-ui'
 $ helm repo update
@@ -11,6 +11,7 @@ $ helm search repo flux-ui
 NAME           	CHART VERSION	APP VERSION	DESCRIPTION
 flux-ui/flux-ui	0.1.0        	1.0        	A Helm chart for flux-ui to interact with fluxctl
 
+$ helm install flux-web-ui flux-ui/flux-ui
 ```
 
 
@@ -30,6 +31,9 @@ flux-ui/flux-ui	0.1.0        	1.0        	A Helm chart for flux-ui to interact w
 
 ### List images 
 <img src="docs/screen-shots/list-images.png"/>
+
+#### Built with 
+* vue.js
 
 ## Support
 
