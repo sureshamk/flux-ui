@@ -35,6 +35,9 @@ $ helm install flux-web-ui flux-ui/flux-ui
 #### Built with 
 * vue.js
 
+##### TODO
+* please raise a feature request :) 
+
 ## Support
 
 * Please don't write mails directly to the maintainers.

@@ -451,8 +451,6 @@
               }
 
             }
-            // eslint-disable-next-line no-console
-            console.log('Satt', status);
             if (status === 'success' || status === 'skipped' || responseData.StatusString === 'failed') {
               release.isActionProgress = !release.isActionProgress;
               self.$set(self.rows, this.getIndex(release.ID), release);
@@ -484,8 +482,6 @@
         }).sort(compare);
       },
       getAlertClass () {
-        // eslint-disable-next-line no-console
-        console.log('DDDDDD', this.selectedItem.job.status);
         if (this.selectedItem.job.status === 'failed') {
           return 'alert-danger ';
 
