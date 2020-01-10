@@ -22,12 +22,12 @@ service:
   port: 80
 
 ingress:
-  enabled: true
+  enabled: false
   annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
-    - host: fluxui.sk8test.tk
+    - host: example.mysite.tk
       paths:
         - /
 
