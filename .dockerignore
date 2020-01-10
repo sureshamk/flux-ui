@@ -5,3 +5,5 @@ node_modules
 .idea
 docker-compose.yml
 README.md
+Dockerfile
+docs
