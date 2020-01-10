@@ -11,8 +11,9 @@ $ helm search repo flux-ui
 NAME           	CHART VERSION	APP VERSION	DESCRIPTION
 flux-ui/flux-ui	0.1.0        	1.0        	A Helm chart for flux-ui to interact with fluxctl
 
-$ helm install flux-web-ui flux-ui/flux-ui
+$ helm install flux-web-ui flux-ui/flux-ui --set config.END_POINT="http://flux:3030/"
 ```
+Note: `config.END_POINT="http://flux:3030/"` this end point should be valid flux service running on your cluster 
 
 
 ### Home 
