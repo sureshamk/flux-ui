@@ -1,3 +1,8 @@
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/sureshamk/flux-ui/graphs/commit-activity)
+[![GitHub license](https://img.shields.io/github/license/sureshamk/flux-ui.svg)](https://github.com/sureshamk/flux-ui/blob/master/LICENSE)
+[![GitHub contributors](https://img.shields.io/github/contributors/sureshamk/flux-ui.svg)](https://GitHub.com/sureshamk/flux-ui/graphs/contributors/)
+[![GitHub issues](https://img.shields.io/github/issues/sureshamk/flux-ui.svg)](https://GitHub.com/sureshamk/flux-ui/issues/)
+
 # Flux-ui 
 This is project for providing web ui for fluxctl. 
 
