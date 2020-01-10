@@ -28,11 +28,9 @@ spec:
             - name: http
               containerPort: 80
               protocol: TCP
-          env:
-            - name: END_POINT
-              value: http://flux:3030/
-            - name: BASE_API
-              value: /api/
+          envFrom:
+          - configMapRef:
+             name: {{ include "flux-ui.fullname" . }}
           livenessProbe:
             httpGet:
               path: /

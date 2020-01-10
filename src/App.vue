@@ -11,22 +11,18 @@
                                 </div>
                             </div>
                             <input type="text" class="rounded-0 form-control" v-model="search"
-                                   id="inlineFormInputGroup" placeholder="Search">
+                                   id="inlineFormInputGroup" placeholder="Search in workloads">
                         </div>
                     </div>
                     <div style="height: 800px;overflow: auto;">
                         <div class="card rounded-0" v-bind:class="{ 'text-white bg-primary': selectedItem.ID===row.ID }"
-
                              v-bind:key="row.ID"
                              v-for="(row,index) in filteredAndSorted" v-on:click="view(row,index)">
                             <div class="card-body">
 
-                                <h5 class="card-title">{{row.ID}}
-                                    <span
-                                            v-if="row.job && Object.keys(row.job).length!==0"><span
-                                            class="badge badge-pill badge-warning"> <JobStatus
-                                            :status="row.job.status"></JobStatus></span></span>
-
+                                <h5 class="card-title">
+                                    <span v-if="row.job && Object.keys(row.job).length!==0"><JobStatus
+                                            :status="row.job.status"></JobStatus></span>{{row.ID}}
                                 </h5>
                                 <h6 class="card-subtitle"> Namespace: {{row.namespace}}</h6>
                                 <p class="m-0">Status : {{row.Status}}</p>
@@ -45,7 +41,12 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-5" v-if="selectedItem.ID">
+                <div class="col-5"
+                     v-bind:class="{
+                     'col-5':actionType,
+                     'col-9':!actionType
+                     }"
+                     v-if="selectedItem.ID">
 
                     <div class="card rounded-0">
                         <div class="card-header">
@@ -75,41 +76,57 @@
                                     Sync
                                 </button>
                             </div>
-
-                            <table class="table table-hover table-responsive">
-                                <thead>
-                                <tr>
-                                    <th>Container</th>
-                                    <th>Image</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <tr v-bind:key="index"
-                                    v-for="(container,index) in selectedItem.Containers">
-                                    <th>{{container.Name}}</th>
-                                    <td>{{container.Current.ID}}</td>
-                                </tr>
-                                </tbody>
-                            </table>
-
-
-                            <h6>Policies </h6>
-                            <table class="table table-hover"
-                                   v-if="Object.keys(selectedItem.Policies).length!==0">
-                                <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Policy</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <tr v-bind:key="index"
-                                    v-for="(policy,index) in selectedItem.Policies">
-                                    <th>{{index}}</th>
-                                    <th>{{policy}}</th>
-                                </tr>
-                                </tbody>
-                            </table>
+                            <hr>
+                            <div class="card">
+                                <div class="card-header">
+                                    Workload Containers
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive" style="max-height: 400px">
+                                        <table class="table table-hover">
+                                            <thead>
+                                            <tr>
+                                                <th>Container</th>
+                                                <th>Image</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr v-bind:key="index"
+                                                v-for="(container,index) in selectedItem.Containers">
+                                                <th>{{container.Name}}</th>
+                                                <td>{{container.Current.ID}}</td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="card">
+                                <div class="card-header">
+                                    Policies
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive" style="max-height: 400px">
+                                        <table style="height: 200px" class="table table-hover"
+                                               v-if="Object.keys(selectedItem.Policies).length!==0">
+                                            <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Policy</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr v-bind:key="index"
+                                                v-for="(policy,index) in selectedItem.Policies">
+                                                <th>{{index}}</th>
+                                                <th>{{policy}}</th>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
                             <hr>
                             <button v-on:click="getImages">
                                 Show Images
@@ -257,6 +274,7 @@
       view (row) {
         this.selectedItem.isActionProgress = false;
         this.selectedItem = row;
+        this.actionType = null;
         this.$set(this.rows, this.getIndex(row.ID), this.selectedItem);
       },
       toggleAction (action) {

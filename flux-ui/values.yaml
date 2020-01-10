@@ -13,6 +13,9 @@ image:
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""
+config:
+  END_POINT: "http://flux:3030/"
+  BASE_API: "/api/"
 
 service:
   type: ClusterIP
@@ -24,7 +27,7 @@ ingress:
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
-    - host: fluxui.example.com
+    - host: fluxui.sk8test.tk
       paths:
         - /
 
